@@ -32,12 +32,9 @@ byte argBuffer      [6]	 = { 0, 0, 0, 0, 0, 0                   };
 long errorTime = 0;
 int commandPointer = 0;
 
-void sit() {}
-
 void writeChar(char c)
 {
 	sendChar(uartTwo, c);
-	while (!bXmitComplete(uartOne)) sit();
 }
 
 void writeChars(char* c)
@@ -58,7 +55,7 @@ void writeLine(char* c)
 void writeSensorUpdate(char* name, long* arr, int s, int c)
 {
 	writeChars(name);
-	writeChars("Update:");
+	writeChar(':');
 	for (int i = s; i < s + c; i ++)
 		writeChar(arr[i]);
 	writeLine(";");
@@ -70,11 +67,11 @@ task SendSensorValues()
 	{
 		for (int i = 0; i < 48; i ++)
 			sensorValues[i] = SensorValue[i];
-		writeSensorUpdate("Analog", &sensorValues[0], ANALOG_START, ANALOG_COUNT);
-		writeSensorUpdate("Digital", &sensorValues[0], DIGITAL_START, DIGITAL_COUNT);
+		writeSensorUpdate("A", &sensorValues[0], ANALOG_START, ANALOG_COUNT);
+		writeSensorUpdate("D", &sensorValues[0], DIGITAL_START, DIGITAL_COUNT);
 		for (int i = 0; i < 10; i ++)
 			motors[i] = motor[i];
-		writeSensorUpdate("Motor", motors, MOTOR_START, MOTOR_COUNT);
+		writeSensorUpdate("M", motors, MOTOR_START, MOTOR_COUNT);
 		wait1Msec(20);
 	}
 }
@@ -109,7 +106,7 @@ void error(char* message)
 int parseArgs()
 {
 	int args = 0;
-	byte num = 0;
+	unsigned byte num = 0;
 
 	for (int i = 1; i < 24 && commandBuffer[i] != CMD_END; i ++)
 	{
@@ -170,6 +167,8 @@ void handleByte(byte val)
 
 	default:
 		commandBuffer[commandPointer++] = val;
+		if (commandPointer == 23)
+			handleByte(MSG_END);
 	}
 }
 

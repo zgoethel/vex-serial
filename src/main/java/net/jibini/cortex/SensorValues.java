@@ -17,14 +17,14 @@ public class SensorValues
 	//TODO: String parse byte values; possible error when byte == 10 (value of '\n')
 	public void handleUpdate(String update)
 	{
-		if (update.contains(":") && update.contains(";") && update.contains("Update"))
+		if (update.contains(":") && update.contains(";"))
 		{
 			String[] colonSplit = update.split(":", 2);
 			String updateStr = colonSplit[0];
 			String valueStr = colonSplit[1];
 			byte[] values = valueStr.getBytes();
 			
-			if (updateStr.startsWith("Analog"))
+			if (updateStr.equals("A"))
 			{
 				if (values.length == ANALOG_COUNT + 1)
 				{
@@ -35,7 +35,7 @@ public class SensorValues
 				
 				for (Runnable run : onUpdate)
 					run.run();
-			} else if (updateStr.startsWith("Digital"))
+			} else if (updateStr.equals("D"))
 			{
 				if (values.length == DIGITAL_COUNT + 1)
 				{
@@ -43,7 +43,7 @@ public class SensorValues
 						digital[i] = values[i];
 				} else
 					System.out.println("Unexpected digital update count: " + values.length);
-			} else if (updateStr.startsWith("Motor"))
+			} else if (updateStr.equals("M"))
 			{
 				if (values.length == MOTOR_COUNT + 1)
 				{
