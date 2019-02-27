@@ -18,10 +18,11 @@ public class Cortex
 	public BufferedReader input;
 	public OutputStream output;
 	
-	public Cortex(String port, int baudRate)
+	public Cortex(String port, int baudRate, boolean showReadout)
 	{
 		sensorValues = new SensorValues();
 		sensorReadout = new SensorReadout(sensorValues);
+		sensorReadout.setVisible(showReadout);
 		
 		serial = new NRSerialPort(port, baudRate);
 		serial.connect();
@@ -32,6 +33,11 @@ public class Cortex
 		startInfiniteThread(this::updateOutput);
 		
 		SINGLETON = this;
+	}
+	
+	public Cortex(String port, int baudRate)
+	{
+		this(port, baudRate, false);
 	}
 	
 	private void updateInput()
@@ -51,7 +57,8 @@ public class Cortex
 	{
 		try
 		{
-			byte[] buff = { (byte)0, (byte)1, (byte)10, (byte)(1 - sensorValues.digital[10]), (byte)10 };
+			String cmd = "D10," + (1 - sensorValues.digital[10]) + ";\n";
+			byte[] buff = cmd.getBytes();
 			
 			for (byte b : buff)
 			{

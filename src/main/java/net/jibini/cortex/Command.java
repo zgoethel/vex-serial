@@ -2,6 +2,7 @@ package net.jibini.cortex;
 
 import java.util.LinkedList;
 
+@Deprecated
 public class Command extends LinkedList<Byte>
 {
 	private static final long serialVersionUID = 1L;

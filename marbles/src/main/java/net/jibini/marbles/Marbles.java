@@ -1,6 +1,5 @@
 package net.jibini.marbles;
 
-import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -41,8 +40,7 @@ public class Marbles
 		for (String s : NRSerialPort.getAvailableSerialPorts())
 			System.out.print(s + " ");
 		System.out.println();
-
-		cortex = new Cortex(CORTEX_PORT, CORTEX_BAUD);
+		cortex = new Cortex(CORTEX_PORT, CORTEX_BAUD, true);
 
 		capture = new VideoCapture();
 		capture.open(0);
@@ -66,7 +64,7 @@ public class Marbles
 			type = BufferedImage.TYPE_3BYTE_BGR;
 		int bufferSize = m.channels() * m.cols() * m.rows();
 		byte[] b = new byte[bufferSize];
-		m.get(0, 0, b); // get all the pixels
+		m.get(0, 0, b);
 		BufferedImage image = new BufferedImage(m.cols(), m.rows(), type);
 		final byte[] targetPixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 		System.arraycopy(b, 0, targetPixels, 0, b.length);

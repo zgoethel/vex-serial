@@ -66,7 +66,6 @@ public class SensorReadout extends JFrame
 			digital[rI].setHorizontalAlignment(JLabel.CENTER);
 		}
 		
-		this.setVisible(true);
 		values.onUpdate.add(this::onUpdate);
 		this.values = values;
 		lastUpdate = System.nanoTime();

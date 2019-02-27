@@ -14,6 +14,7 @@ public class SensorValues
 	public byte[] analog = new byte[ANALOG_COUNT];
 	public List<Runnable> onUpdate = new ArrayList<>();
 	
+	//TODO: String parse byte values; possible error when byte == 10 (value of '\n')
 	public void handleUpdate(String update)
 	{
 		if (update.contains(":") && update.contains(";") && update.contains("Update"))
