@@ -3,8 +3,11 @@ package net.jibini.cortex;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import gnu.io.NRSerialPort;
+import net.jibini.cortex.port.DigitalPort;
 import net.jibini.cortex.ui.SensorReadout;
 
 public class Cortex
@@ -17,6 +20,10 @@ public class Cortex
 	public NRSerialPort serial;
 	public BufferedReader input;
 	public OutputStream output;
+	
+	public List<String> sendQueue = new CopyOnWriteArrayList<>();
+	public long lastBlink = 0L;
+	public DigitalPort statusBlink;
 	
 	public Cortex(String port, int baudRate, boolean showReadout)
 	{
@@ -33,6 +40,7 @@ public class Cortex
 		startInfiniteThread(this::updateOutput);
 		
 		SINGLETON = this;
+		statusBlink = new DigitalPort(10);
 	}
 	
 	public Cortex(String port, int baudRate)
@@ -57,16 +65,23 @@ public class Cortex
 	{
 		try
 		{
-			String cmd = "D10," + (1 - sensorValues.digital[10]) + ";\n";
-			byte[] buff = cmd.getBytes();
-			
-			for (byte b : buff)
+			if (System.currentTimeMillis() - lastBlink > 333)
 			{
-				output.write(b);
-				output.flush();
+				statusBlink.set(1 - statusBlink.get());
+				lastBlink = System.currentTimeMillis();
 			}
 			
-			Thread.sleep(333);
+			for (String command : sendQueue)
+			{
+				for (byte b : command.getBytes())
+				{
+					output.write(b);
+					output.flush();
+					Thread.sleep(1);
+				}
+				
+				sendQueue.remove(command);
+			}
 		} catch (Exception e)
 		{
 			e.printStackTrace();

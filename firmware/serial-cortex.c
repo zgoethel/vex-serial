@@ -25,9 +25,9 @@ long sensorValues   [48] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 long motors         [10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0       };
-byte commandBuffer  [24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+char commandBuffer  [24] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-byte argBuffer      [6]	 = { 0, 0, 0, 0, 0, 0                   };
+char argBuffer      [6]	 = { 0, 0, 0, 0, 0, 0                   };
 
 long errorTime = 0;
 int commandPointer = 0;
@@ -35,6 +35,7 @@ int commandPointer = 0;
 void writeChar(char c)
 {
 	sendChar(uartTwo, c);
+	//while (!bXmitComplete(uartTwo));
 }
 
 void writeChars(char* c)
@@ -52,12 +53,51 @@ void writeLine(char* c)
 	writeChar('\n');
 }
 
+// Inbuilt pow(a, b) function returns 10^2 = 99
+int power(int a, int b)
+{
+	int n = 1;
+	for (int i = 0; i < b; i ++)
+		n *= a;
+	return n;
+}
+
+void writeNumber(long num)
+{
+	if (num < 0)
+	{
+		writeChar('-');
+		num *= -1;
+	} else if (num == 0)
+	{
+		writeChar('0');
+		return;
+	}
+
+	int chars = log10(num);
+	bool f = num > 100;
+
+	for (int i = chars; i >= 0; i --)
+	{
+		int base = power(10, i);
+		int n = num / base;
+		writeChar(n + '0');
+		num -= base * n;
+	}
+}
+
 void writeSensorUpdate(char* name, long* arr, int s, int c)
 {
 	writeChars(name);
 	writeChar(':');
+
 	for (int i = s; i < s + c; i ++)
-		writeChar(arr[i]);
+	{
+		writeNumber(arr[i]);
+		if (i < s + c - 1)
+			writeChar(',');
+	}
+
 	writeLine(";");
 }
 
@@ -76,7 +116,7 @@ task SendSensorValues()
 	}
 }
 
-void commitWrite(byte typeId, byte pinId, byte writeVal)
+void commitWrite(char typeId, char pinId, char writeVal)
 {
 	switch (typeId)
 	{
@@ -87,7 +127,7 @@ void commitWrite(byte typeId, byte pinId, byte writeVal)
 		SensorValue[pinId] = writeVal;
 		break;
 	case CMD_WRITE_MOTOR:
-		motor[pinId] = writeVal;
+		motor[pinId] = writeVal - 128;
 	}
 }
 
@@ -106,11 +146,11 @@ void error(char* message)
 int parseArgs()
 {
 	int args = 0;
-	unsigned byte num = 0;
+	long num = 0;
 
 	for (int i = 1; i < 24 && commandBuffer[i] != CMD_END; i ++)
 	{
-		byte b = commandBuffer[i];
+		char b = commandBuffer[i];
 
 		if (b == CMD_SPLIT)
 		{
@@ -119,11 +159,11 @@ int parseArgs()
 		} else if (b >= '0' && b <= '9')
 		{
 			// ASCII for '0' is 48
-			byte converted = b - '0';
+			char converted = b - '0';
 			num *= 10;
 			num += converted;
 		} else
-			error("Unrecognized value while parsing: ", b);
+			error("Unrecognized value while parsing: %d", b);
 	}
 
 	argBuffer[args++] = num;
@@ -133,7 +173,7 @@ int parseArgs()
 void handleCommand()
 {
 	int args = parseArgs();
-	byte cmd = commandBuffer[0];
+	char cmd = commandBuffer[0];
 
 	switch (cmd)
 	{
@@ -143,14 +183,14 @@ void handleCommand()
 		if (args == 2)
 			commitWrite(cmd, argBuffer[0], argBuffer[1]);
 		else
-			error("Unexpected number of arguments: ", args);
+			error("Unexpected number of arguments: %d", args);
 		break;
 	default:
-		error("Unrecognized command number: ", cmd);
+		error("Unrecognized command number: %d", cmd);
 	}
 }
 
-void handleByte(byte val)
+void handleChar(char val)
 {
 	switch (val)
 	{
@@ -168,7 +208,7 @@ void handleByte(byte val)
 	default:
 		commandBuffer[commandPointer++] = val;
 		if (commandPointer == 23)
-			handleByte(MSG_END);
+			handleChar(MSG_END);
 	}
 }
 
@@ -178,7 +218,7 @@ task WaitForCommands()
 	{
 		char rx = getChar(uartTwo);
 		if (rx != 255)
-			handleByte(rx);
+			handleChar(rx);
 	}
 }
 

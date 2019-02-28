@@ -4,13 +4,25 @@ import net.jibini.cortex.Cortex;
 
 public class DigitalPort extends Port
 {
-	public DigitalPort(Cortex cortex, byte pin)
+	public DigitalPort(Cortex cortex, int pin)
 	{
-		super(cortex, Port.PortType.DIGITAL, pin);
+		super(cortex, pin);
 	}
 	
-	public DigitalPort(byte pin)
+	public DigitalPort(int pin)
 	{
 		this(Cortex.SINGLETON, pin);
+	}
+	
+	@Override
+	public int get()
+	{
+		return cortex.sensorValues.digital[pin];
+	}
+
+	@Override
+	public char getCommandID()
+	{
+		return 'D';
 	}
 }

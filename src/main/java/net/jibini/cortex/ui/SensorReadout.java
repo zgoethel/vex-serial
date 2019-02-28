@@ -74,11 +74,11 @@ public class SensorReadout extends JFrame
 	private void onUpdate()
 	{
 		for (int i = 0; i < SensorValues.ANALOG_COUNT; i ++)
-			analog[i].setText(Byte.toString(values.analog[i]));
+			analog[i].setText(Integer.toString(values.analog[i]));
 		for (int i = 0; i < SensorValues.DIGITAL_COUNT; i ++)
-			digital[i].setText(Byte.toString(values.digital[i]));
+			digital[i].setText(Integer.toString(values.digital[i]));
 		for (int i = 0; i < SensorValues.MOTOR_COUNT; i ++)
-			motor[i].setText(Byte.toString(values.motor[i]));
+			motor[i].setText(Integer.toString(values.motor[i]));
 		
 		long diff = System.nanoTime() - lastUpdate;
 		lastUpdate = System.nanoTime();

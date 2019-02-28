@@ -1,58 +1,29 @@
 package net.jibini.cortex.port;
 
-import net.jibini.cortex.Command;
 import net.jibini.cortex.Cortex;
 
-public class Port
+public abstract class Port
 {
-	public static enum PortType
-	{
-		ANALOG, DIGITAL, MOTOR;
-	}
-	
 	public Cortex cortex;
-	public PortType type;
-	public byte pin;
+	public int pin;
 	
-	public Port(Cortex cortex, PortType type, byte pin)
+	public Port(Cortex cortex, int pin)
 	{
 		this.cortex = cortex;
-		this.type = type;
 		this.pin = pin;
 	}
 	
-	public byte getValue()
-	{
-		switch (type)
-		{
-		case ANALOG:
-			return cortex.sensorValues.analog[pin];
-		case DIGITAL:
-			return cortex.sensorValues.digital[pin];
-		case MOTOR:
-			return cortex.sensorValues.motor[pin];
-		default:
-			return 0;
-		}
-	}
+	public abstract int get();
 	
-	public byte getWriteType()
-	{
-		switch (type)
-		{
-		case ANALOG:
-			return Command.COMMAND_WRITE_ANALOG;
-		case DIGITAL:
-			return Command.COMMAND_WRITE_DIGITAL;
-		case MOTOR:
-			return Command.COMMAND_WRITE_MOTOR;
-		default:
-			return 0;
-		}
-	}
+	public abstract char getCommandID();
 	
-	public void setValue(byte value)
+	public void set(int value)
 	{
-		Command writeCommand = Command.createWrite(getWriteType(), pin, value);
+		StringBuilder command = new StringBuilder();
+		command.append(getCommandID());
+		command.append(pin).append(',');
+		command.append(value).append(";\n");
+		
+		cortex.sendQueue.add(command.toString());
 	}
 }
