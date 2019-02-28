@@ -1,5 +1,6 @@
 package net.jibini.marbles;
 
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -7,9 +8,12 @@ import java.awt.image.DataBufferByte;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
 import gnu.io.NRSerialPort;
@@ -27,6 +31,9 @@ public class Marbles
 	public Mat frame = new Mat();
 	public JFrame f = new JFrame();
 	public JLabel l = new JLabel();
+	public JFrame c = new JFrame();
+	
+	public JSlider[] sliders = new JSlider[6];
 
 	static
 	{
@@ -49,11 +56,22 @@ public class Marbles
 		f.add(l);
 		f.setVisible(true);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		JPanel p = new JPanel(new GridLayout(6, 1));
+		c.add(p);
+		for (int i = 0; i < sliders.length; i ++)
+			p.add(sliders[i] = new JSlider(0, 255));
+		c.pack();
+		c.setVisible(true);
+		c.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
 	private void update()
 	{
 		capture.read(frame);
+		
+		Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2HSV);
+		
 		displayImage(Mat2BufferedImage(frame));
 	}
 
