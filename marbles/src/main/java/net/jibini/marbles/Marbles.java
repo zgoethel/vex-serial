@@ -1,6 +1,5 @@
 package net.jibini.marbles;
 
-import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
@@ -8,11 +7,13 @@ import java.awt.image.DataBufferByte;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
@@ -24,6 +25,8 @@ public class Marbles
 {
 	public static final String CORTEX_PORT = "COM13";
 	public static final int CORTEX_BAUD = 38400;
+	
+	//public static final Scalar MARBLE_WOOD = new Scalar()
 
 	public Cortex cortex;
 	public VideoCapture capture;
@@ -33,7 +36,8 @@ public class Marbles
 	public JLabel l = new JLabel();
 	public JFrame c = new JFrame();
 	
-	public JSlider[] sliders = new JSlider[6];
+	/*public JSlider[] sliders = new JSlider[6];
+	int[] a = new int[sliders.length];*/
 
 	static
 	{
@@ -47,7 +51,7 @@ public class Marbles
 		for (String s : NRSerialPort.getAvailableSerialPorts())
 			System.out.print(s + " ");
 		System.out.println();
-		cortex = new Cortex(CORTEX_PORT, CORTEX_BAUD, true);
+		//cortex = new Cortex(CORTEX_PORT, CORTEX_BAUD, true);
 
 		capture = new VideoCapture();
 		capture.open(0);
@@ -57,22 +61,56 @@ public class Marbles
 		f.setVisible(true);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		JPanel p = new JPanel(new GridLayout(6, 1));
+		/*JPanel p = new JPanel(new GridLayout(6, 1));
 		c.add(p);
 		for (int i = 0; i < sliders.length; i ++)
-			p.add(sliders[i] = new JSlider(0, 255));
+			p.add(sliders[i] = new JSlider(0, 255), i);
+		for (int i = 0; i < 3; i ++)
+			sliders[i].setValue(0);
+		for (int i = 3; i < 6; i ++)
+			sliders[i].setValue(255);
 		c.pack();
 		c.setVisible(true);
-		c.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		c.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
 	}
 
 	private void update()
 	{
+		/*for (int i = 0; i < sliders.length; i ++)
+			a[i] = (sliders[i] == null) ? 0 : sliders[i].getValue();*/
+
 		capture.read(frame);
+		Imgproc.resize(frame, frame, new Size(720, 480));
+		//Imgproc.GaussianBlur(frame, frame, new Size(11, 11), 4);
+		//Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2HSV);
+		/*Core.inRange(frame, new Scalar(a[0], a[1], a[2]), new Scalar(a[3], a[4], a[5]), frame);
 		
-		Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2HSV);
+		Mat erode = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(11, 11));
+	    Mat dilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(12, 12));
+	    Imgproc.erode(frame, frame, erode);
+	    Imgproc.dilate(frame, frame, dilate);*/
+		
+		Mat cropped = new Mat(frame, new Rect(720 / 2 - 20, 480 / 2 - 20, 40, 40));
+	    Scalar mean = Core.mean(cropped);
+		Imgproc.rectangle(frame, new Point(720 / 2 - 20, 480 / 2 - 20), new Point(720 / 2 + 20, 480 / 2 + 20), mean);
+		
+		double r, g, b;
+		Imgproc.putText(frame, "B" + (b = mean.val[0]), new Point(0, 40), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 0, 0));
+		Imgproc.putText(frame, "G" + (g = mean.val[1]), new Point(0, 80), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(0, 255, 0));
+		Imgproc.putText(frame, "R" + (r = mean.val[2]), new Point(0, 120), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(0, 0, 255));
+		
+		if (b > 160 && g > 200)
+			Imgproc.putText(frame, "Opaque White", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
+		else if (r < 135)
+			Imgproc.putText(frame, "Steel", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
+		else if (g > 100 && r > 160 && b < 150)
+			Imgproc.putText(frame, "Wood", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
+		else
+			Imgproc.putText(frame, "Clear White", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
+			
 		
 		displayImage(Mat2BufferedImage(frame));
+		frame.release();
 	}
 
 	public BufferedImage Mat2BufferedImage(Mat m)
