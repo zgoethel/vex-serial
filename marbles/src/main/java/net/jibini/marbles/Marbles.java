@@ -19,6 +19,7 @@ import org.opencv.videoio.VideoCapture;
 
 import gnu.io.NRSerialPort;
 import net.jibini.cortex.Cortex;
+import net.jibini.cortex.SensorLog;
 import nu.pattern.OpenCV;
 
 public class Marbles
@@ -30,6 +31,7 @@ public class Marbles
 
 	public Cortex cortex;
 	public VideoCapture capture;
+	public SensorLog r, g, b;
 	
 	public Mat frame = new Mat();
 	public JFrame f = new JFrame();
@@ -72,6 +74,10 @@ public class Marbles
 		c.pack();
 		c.setVisible(true);
 		c.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
+		
+		r = new SensorLog();
+		g = new SensorLog();
+		b = new SensorLog();
 	}
 
 	private void update()
@@ -94,16 +100,19 @@ public class Marbles
 	    Scalar mean = Core.mean(cropped);
 		Imgproc.rectangle(frame, new Point(720 / 2 - 20, 480 / 2 - 20), new Point(720 / 2 + 20, 480 / 2 + 20), mean);
 		
-		double r, g, b;
-		Imgproc.putText(frame, "B" + (b = mean.val[0]), new Point(0, 40), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 0, 0));
-		Imgproc.putText(frame, "G" + (g = mean.val[1]), new Point(0, 80), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(0, 255, 0));
-		Imgproc.putText(frame, "R" + (r = mean.val[2]), new Point(0, 120), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(0, 0, 255));
+		double nr, ng, nb;
+		Imgproc.putText(frame, "B" + (nb = mean.val[0]), new Point(0, 40), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 0, 0));
+		Imgproc.putText(frame, "G" + (ng = mean.val[1]), new Point(0, 80), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(0, 255, 0));
+		Imgproc.putText(frame, "R" + (nr = mean.val[2]), new Point(0, 120), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(0, 0, 255));
+		r.putValue(nr);
+		g.putValue(ng);
+		b.putValue(nb);
 		
-		if (b > 160 && g > 200)
+		if (b.getAverage(10) > 160 && g.getAverage(10) > 215)
 			Imgproc.putText(frame, "Opaque White", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
-		else if (r < 135)
+		else if (r.getAverage(10) < 145)
 			Imgproc.putText(frame, "Steel", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
-		else if (g > 100 && r > 160 && b < 150)
+		else if (g.getAverage(10) > 160 && r.getAverage(10) > 160 && b.getAverage(10) < 200)
 			Imgproc.putText(frame, "Wood", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
 		else
 			Imgproc.putText(frame, "Clear White", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
