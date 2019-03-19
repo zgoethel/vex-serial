@@ -8,6 +8,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import org.joml.Vector3d;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -37,6 +38,24 @@ public class Marbles
 	public JFrame f = new JFrame();
 	public JLabel l = new JLabel();
 	public JFrame c = new JFrame();
+	
+	public Vector3d[] marbles =
+	{
+			new Vector3d(117, 116, 94),
+			new Vector3d(174, 190, 178),
+			new Vector3d(136, 138, 118),
+			new Vector3d(207, 204, 172),
+			new Vector3d(32, 42, 30)
+	};
+	
+	public String[] marbleNames =
+	{
+			"Clear White",
+			"Wood",
+			"Steel",
+			"Opaque White",
+			"None"
+	};
 	
 	/*public JSlider[] sliders = new JSlider[6];
 	int[] a = new int[sliders.length];*/
@@ -108,15 +127,31 @@ public class Marbles
 		g.putValue(ng);
 		b.putValue(nb);
 		
-		if (b.getAverage(10) > 160 && g.getAverage(10) > 215)
+		/*if (b.getAverage(10) > 160 && g.getAverage(10) > 215)
 			Imgproc.putText(frame, "Opaque White", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
 		else if (r.getAverage(10) < 145)
 			Imgproc.putText(frame, "Steel", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
 		else if (g.getAverage(10) > 160 && r.getAverage(10) > 160 && b.getAverage(10) < 200)
 			Imgproc.putText(frame, "Wood", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
 		else
-			Imgproc.putText(frame, "Clear White", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
+			Imgproc.putText(frame, "Clear White", new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));*/
+		
+		Vector3d color = new Vector3d(b.getAverage(10), g.getAverage(10), r.getAverage(10));
+		double shortest = 100;
+		int shortestId = 0;
+		
+		for (int i = 0; i < marbles.length; i ++)
+		{
+			double dist = marbles[i].distance(color);
 			
+			if (dist < shortest)
+			{
+				shortest = dist;
+				shortestId = i;
+			}
+		}
+		
+		Imgproc.putText(frame, marbleNames[shortestId], new Point (0, 300), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 255, 255));
 		
 		displayImage(Mat2BufferedImage(frame));
 		frame.release();
