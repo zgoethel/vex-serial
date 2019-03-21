@@ -1,6 +1,8 @@
 package net.jibini.marbles;
 
 import java.awt.Image;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 
@@ -28,6 +30,8 @@ public class Marbles
 	public static final String CORTEX_PORT = "COM13";
 	public static final int CORTEX_BAUD = 38400;
 	
+	public int centerX = 720 / 2, centerY = 480 / 2;
+	
 	//public static final Scalar MARBLE_WOOD = new Scalar()
 
 	public Cortex cortex;
@@ -41,20 +45,20 @@ public class Marbles
 	
 	public Vector3d[] marbles =
 	{
-			new Vector3d(117, 116, 94),
-			new Vector3d(174, 190, 178),
-			new Vector3d(136, 138, 118),
-			new Vector3d(207, 204, 172),
-			new Vector3d(32, 42, 30)
+			new Vector3d(75, 100, 90),
+			new Vector3d(144, 156, 180),
+			new Vector3d(112, 122, 114),
+			new Vector3d(172, 175, 157),
+			new Vector3d(80, 80, 70)
 	};
 	
 	public String[] marbleNames =
 	{
 			"Clear White",
 			"Wood",
-			"Steel",
+			"Beef",
 			"Opaque White",
-			"None"
+			"None",
 	};
 	
 	/*public JSlider[] sliders = new JSlider[6];
@@ -97,6 +101,45 @@ public class Marbles
 		r = new SensorLog();
 		g = new SensorLog();
 		b = new SensorLog();
+		
+		l.addMouseListener(new MouseListener()
+				{
+
+					@Override
+					public void mouseClicked(MouseEvent arg0)
+					{
+					}
+
+					@Override
+					public void mouseEntered(MouseEvent arg0)
+					{
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void mouseExited(MouseEvent arg0)
+					{
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void mousePressed(MouseEvent arg0)
+					{
+
+						centerX = arg0.getPoint().x;
+						centerY = arg0.getPoint().y;
+					}
+
+					@Override
+					public void mouseReleased(MouseEvent arg0)
+					{
+						// TODO Auto-generated method stub
+						
+					}
+			
+				});
 	}
 
 	private void update()
@@ -115,9 +158,9 @@ public class Marbles
 	    Imgproc.erode(frame, frame, erode);
 	    Imgproc.dilate(frame, frame, dilate);*/
 		
-		Mat cropped = new Mat(frame, new Rect(720 / 2 - 20, 480 / 2 - 20, 40, 40));
+		Mat cropped = new Mat(frame, new Rect(centerX - 20, centerY - 20, 40, 40));
 	    Scalar mean = Core.mean(cropped);
-		Imgproc.rectangle(frame, new Point(720 / 2 - 20, 480 / 2 - 20), new Point(720 / 2 + 20, 480 / 2 + 20), mean);
+		Imgproc.rectangle(frame, new Point(centerX - 20, centerY - 20), new Point(centerX + 20, centerY + 20), mean);
 		
 		double nr, ng, nb;
 		Imgproc.putText(frame, "B" + (nb = mean.val[0]), new Point(0, 40), Core.FONT_HERSHEY_PLAIN, 2, new Scalar(255, 0, 0));
