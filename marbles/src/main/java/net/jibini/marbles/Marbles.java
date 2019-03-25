@@ -23,6 +23,9 @@ import org.opencv.videoio.VideoCapture;
 import gnu.io.NRSerialPort;
 import net.jibini.cortex.Cortex;
 import net.jibini.cortex.SensorLog;
+import net.jibini.cortex.port.DigitalPort;
+import net.jibini.cortex.port.MotorPort;
+import net.jibini.cortex.port.Port;
 import nu.pattern.OpenCV;
 
 public class Marbles
@@ -43,12 +46,19 @@ public class Marbles
 	public JLabel l = new JLabel();
 	public JFrame c = new JFrame();
 	
+	public int target, home, lastTarget, speed;
+	public long lastSpin;
+	
+	public Port ben, bencoder;
+	public Port wings, wingEncoder;
+	
 	public Vector3d[] marbles =
 	{
 			new Vector3d(75, 100, 90),
 			new Vector3d(144, 156, 180),
 			new Vector3d(112, 122, 114),
 			new Vector3d(172, 175, 157),
+			
 			new Vector3d(80, 80, 70)
 	};
 	
@@ -56,9 +66,10 @@ public class Marbles
 	{
 			"Clear White",
 			"Wood",
-			"Beef",
+			"Steel",
 			"Opaque White",
-			"None",
+			
+			"None"
 	};
 	
 	/*public JSlider[] sliders = new JSlider[6];
@@ -76,7 +87,7 @@ public class Marbles
 		for (String s : NRSerialPort.getAvailableSerialPorts())
 			System.out.print(s + " ");
 		System.out.println();
-		//cortex = new Cortex(CORTEX_PORT, CORTEX_BAUD, true);
+		cortex = new Cortex(CORTEX_PORT, CORTEX_BAUD, true);
 
 		capture = new VideoCapture();
 		capture.open(0);
@@ -103,43 +114,48 @@ public class Marbles
 		b = new SensorLog();
 		
 		l.addMouseListener(new MouseListener()
-				{
+		{
+			@Override
+			public void mouseClicked(MouseEvent arg0)
+			{}
 
-					@Override
-					public void mouseClicked(MouseEvent arg0)
-					{
-					}
+			@Override
+			public void mouseEntered(MouseEvent arg0)
+			{}
 
-					@Override
-					public void mouseEntered(MouseEvent arg0)
-					{
-						// TODO Auto-generated method stub
-						
-					}
+			@Override
+			public void mouseExited(MouseEvent arg0)
+			{}
 
-					@Override
-					public void mouseExited(MouseEvent arg0)
-					{
-						// TODO Auto-generated method stub
-						
-					}
+			@Override
+			public void mousePressed(MouseEvent arg0)
+			{
 
-					@Override
-					public void mousePressed(MouseEvent arg0)
-					{
+				centerX = arg0.getPoint().x;
+				centerY = arg0.getPoint().y;
+			}
 
-						centerX = arg0.getPoint().x;
-						centerY = arg0.getPoint().y;
-					}
-
-					@Override
-					public void mouseReleased(MouseEvent arg0)
-					{
-						// TODO Auto-generated method stub
-						
-					}
+			@Override
+			public void mouseReleased(MouseEvent arg0)
+			{}
+		});
+		
+		try
+		{
+			ben = new MotorPort(4);
+			bencoder = new DigitalPort(0);
+			wings = new MotorPort(1);
+			wingEncoder = new DigitalPort(4);
 			
-				});
+			Thread.sleep(10000);
+			home = bencoder.get();
+			target = home;
+			
+			lastSpin = System.currentTimeMillis();
+		} catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	private void update()
@@ -198,6 +214,22 @@ public class Marbles
 		
 		displayImage(Mat2BufferedImage(frame));
 		frame.release();
+		
+		if (target - cortex.sensorValues.digital[0] < 6 && ben.get() > 0)
+		{
+			System.out.println("Stop");
+			ben.set(0);
+		} else if (target - cortex.sensorValues.digital[0] >= 6 && ben.get() == 0)
+		{
+			System.out.println("Start");
+			ben.set(16);
+		}
+		
+		if (System.currentTimeMillis() - lastSpin > 3000 && ben.get() == 0)
+		{
+			target += 45;
+			lastSpin = System.currentTimeMillis();
+		}
 	}
 
 	public BufferedImage Mat2BufferedImage(Mat m)
